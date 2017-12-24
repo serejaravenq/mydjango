@@ -2,75 +2,472 @@
 #from .models import Book
 #from django.template.loader import render_to_string
 #from .forms import BookForm
+#from django.views.decorators.csrf import csrf_exempt
+#import json.JSONEncoder
+from django.http import HttpResponse
+#from django.http import HttpResponseRedirect
+from django.http import JsonResponse
+#from django.utils.decorators import method_decorator
+#from django.core import serializers
+#from django.forms.models import modelform_factory
+#from django.http import QueryDict
 
-
-# Create your views here.
-from .models import todoInfo
+import json
+from django.views.generic import View
+from .models import myTodo
 from .forms import NameForm
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.shortcuts import render, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+def all(request):
+
+    return JsonResponse('ok', safe=False)
+# Create your views here.
+class RestView(View):
+
+    def delAll(request):
+        if request.method == "PUT":
+            data = json.loads(request.body.decode('UTF-8'))
+            print(data)
+            #title = data.get('title')
+            event = data.get('idevent')
+            content = myTodo.objects.all().filter(active=False).delete()
+
+            for i in content:
+                print(i)
+
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            paginator = Paginator(all_todo, 5)
+
+            form = NameForm()
+
+            currentpage = data.get('currentpage')
+
+            if currentpage == None:
+                page = paginator.num_pages
+            else:
+                page = currentpage
+
+            try:
+                pages = paginator.page(page)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def onAll(request):
+        if request.method == "PUT":
+            data = json.loads(request.body.decode('UTF-8'))
+            print(data)
+            #title = data.get('title')
+            event = data.get('idevent')
+            myTodo.objects.all().update(active=False)
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            paginator = Paginator(all_todo, 5)
+
+            form = NameForm()
+
+            currentpage = data.get('currentpage')
+
+            if currentpage == None:
+                page = paginator.num_pages
+            else:
+                page = currentpage
+
+            try:
+                pages = paginator.page(page)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def offAll(request):
+        if request.method == "PUT":
+            data = json.loads(request.body.decode('UTF-8'))
+            print(data)
+            #title = data.get('title')
+            event = data.get('idevent')
+            myTodo.objects.all().update(active=True)
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            paginator = Paginator(all_todo, 5)
+
+            form = NameForm()
+
+            currentpage = data.get('currentpage')
+
+            if currentpage == None:
+                page = paginator.num_pages
+            else:
+                page = currentpage
+
+            try:
+                pages = paginator.page(page)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def all(request):
+        check_todo = myTodo.objects.filter(active=True).count()
+        uncheck_todo = myTodo.objects.filter(active=False).count()
+        all_todo = myTodo.objects.all().order_by('id')
+        paginator = Paginator(all_todo, 5)
+        page = request.GET.get('page')
+
+        form = NameForm()
+        try:
+            pages = paginator.page(paginator.num_pages)#page
+        except PageNotAnInteger:
+            pages = paginator.page(1)
+        except EmptyPage:
+            pages = paginator.page(paginator.num_pages)
+
+        path = request.path.split('/')
+        event = path[2]
+        pages.event = event
+
+        return render(request, 'index.html',
+                {'pages': pages,'form': form,
+                'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
 
 
-#get_name
+    def checked(request):
+        check_todo = myTodo.objects.filter(active=True).count()
+        uncheck_todo = myTodo.objects.filter(active=False).count()
+        all_todo = myTodo.objects.all().filter(active=False).order_by('id')
 
-def index(request):
-    #count_todo = todoInfo.objects.all()
-    # if this is a POST request we need to process the form data
-    if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
-        form = NameForm(request.POST)
-        # check whether it's valid:
 
-        if form.is_valid():
-            post = form.save(commit=False)
-           # post.title = request.name_field
-            post.save()
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            #return render(request, 'index.html', {'form': form})
-            return HttpResponseRedirect(request.path)
+        paginator = Paginator(all_todo, 5)
 
-    # if a GET (or any other method) we'll create a blank form
-    else:
+        page = request.GET.get('page')
+
+        if page == None:
+                page = paginator.num_pages
         form = NameForm()
 
-    count_todo = todoInfo.objects.all().count()
-    all_todo = todoInfo.objects.all()
+        try:
+            pages = paginator.page(page)#page
+        except PageNotAnInteger:
+            pages = paginator.page(1)
+        except EmptyPage:
+            pages = paginator.page(paginator.num_pages)
 
-    return render(request, 'index.html', {'form': form, 'count_todo': count_todo, 'all_todo': all_todo})
+        path = request.path.split('/')
+        event = path[2]
+        pages.event = event
 
-'''
-def index(request):
-    """
-    Функция отображения для домашней страницы сайта.
-    """
-    # Генерация "количеств" некоторых главных объектов
-   # num_books = Person.objects.all().count()
-  #  num_instances = BookInstance.objects.all().count()
-    # Доступные книги (статус = 'a')
-   # num_instances_available = BookInstance.objects.filter(status__exact='a').count()
-  #  num_authors = Author.objects.count()  # Метод 'all()' применен по умолчанию.
+        return render(request, 'checked.html',
+                {'pages': pages,'form': form,
+                'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
 
-    # Отрисовка HTML-шаблона index.html с данными внутри
-    # переменной контекста context
-    return render(
-        request,
-        'index.html',
-        context={}#{'num_books': num_books}# 'num_instances': num_instances,
-                 #'num_instances_available': num_instances_available, 'num_authors': num_authors},
-    )
-'''
 
-def book_list(request):
-    books = Book.objects.all()
-    return render(request, 'books/book_list.html', {'books': books})
+    def unchecked(request):
+        check_todo = myTodo.objects.filter(active=True).count()
+        uncheck_todo = myTodo.objects.filter(active=False).count()
 
-def book_create(request):
-    form = BookForm()
-    context = {'form': form}
-    html_form = render_to_string('books/includes/partial_book_create.html',
-        context,
-        request=request,
-    )
-    return JsonResponse({'html_form': html_form})
+        all_todo = myTodo.objects.filter(active=True).order_by('id')
+
+        paginator = Paginator(all_todo, 5)
+        page = request.GET.get('page')
+
+        form = NameForm()
+
+        try:
+            pages = paginator.page(paginator.num_pages)#page
+        except PageNotAnInteger:
+            pages = paginator.page(1)
+        except EmptyPage:
+            pages = paginator.page(paginator.num_pages)
+
+        path = request.path.split('/')
+        event = path[2]
+        pages.event = event
+
+        return render(request, 'unchecked.html',
+                {'pages': pages,'form': form,
+                'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+
+    def get(request):
+        if request.method == "GET":
+            event = request.GET.get('filter')
+
+            if event == None:
+                event = 'all'
+            if event == '':
+                event = 'all'
+            print(event)
+
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+
+            paginator = Paginator(all_todo, 5)
+            page = request.GET.get('page')
+
+            if page == None:
+                page = paginator.num_pages
+
+            form = NameForm()
+            try:
+                pages = paginator.page(page)#page
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def post(request):
+        if request.method == "POST":
+            array = json.loads(request.body.decode('UTF-8'))
+            request.POST = array[0]
+            event = array[1]
+
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            form = NameForm(request.POST)
+            if form.is_valid():
+                form.save()
+
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            page = request.GET.get('page')
+            paginator = Paginator(all_todo, 5)
+
+            try:
+                pages = paginator.page(paginator.num_pages)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,
+                      'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def update(request, id):
+         if request.method == "PUT":
+            data = json.loads(request.body.decode('UTF-8'))
+            print(data)
+            title = data.get('title')
+            event = data.get('idevent')
+
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            print(event)
+            myTodo.objects.filter(id=id).update(title=title)
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            paginator = Paginator(all_todo, 5)
+
+            form = NameForm()
+
+            currentpage = data.get('currentpage')
+
+            if currentpage == None:
+                page = paginator.num_pages
+            else:
+                page = currentpage
+
+            try:
+                pages = paginator.page(page)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def put(request, id):
+        if request.method == "PUT":
+
+            data = json.loads(request.body.decode('UTF-8'))
+            print(data)
+            status = data.get('status')
+            status = True if status == 'true' else False
+            event = data.get('idevent')
+            print(event)
+            if event == 'all':
+                all_todo = myTodo.objects.all().order_by('id')
+                template = 'index.html'
+            elif event == 'unchecked':
+                all_todo = myTodo.objects.filter(active=True).order_by('id')
+                template = 'unchecked.html'
+            elif event == 'checked':
+                all_todo = myTodo.objects.filter(active=False).order_by('id')
+                template = 'checked.html'
+
+            myTodo.objects.filter(id=id).update(active=status)
+            form = NameForm()
+
+            check_todo = myTodo.objects.filter(active=True).count()
+            uncheck_todo = myTodo.objects.filter(active=False).count()
+            paginator = Paginator(all_todo, 5)
+
+            idget = data.get('strget')
+            currentpage = data.get('currentpage')
+
+            if currentpage == None:
+                page = paginator.num_pages
+            else:
+                page = currentpage
+            print(page)
+            try:
+                pages = paginator.page(page)
+            except PageNotAnInteger:
+                pages = paginator.page(1)
+            except EmptyPage:
+                pages = paginator.page(paginator.num_pages)
+            pages.event = event
+
+            return render(request, template,
+                     {'pages': pages,'form': form,
+                      'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+    def delete(request, id):
+    # delete an object and send a confirmation response
+        if request.method == "DELETE":
+
+                data = json.loads(request.body.decode('UTF-8'))
+                myTodo.objects.get(id=id).delete()
+                event = data.get('idevent')
+                print(event)
+                if event == 'all':
+                    all_todo = myTodo.objects.all().order_by('id')
+                    template = 'index.html'
+                elif event == 'unchecked':
+                    all_todo = myTodo.objects.filter(active=True).order_by('id')
+                    template = 'unchecked.html'
+                elif event == 'checked':
+                    all_todo = myTodo.objects.filter(active=False).order_by('id')
+                    template = 'checked.html'
+
+                check_todo = myTodo.objects.filter(active=True).count()
+                uncheck_todo = myTodo.objects.filter(active=False).count()
+                page = request.GET.get('page')
+                paginator = Paginator(all_todo, 5)
+                form = NameForm()
+                idget = data.get('strget')
+
+                if idget == 'None':
+                   page = paginator.num_pages
+                else:
+                    result = idget.split('&')
+                    page = result[0].split('=')[1]
+
+                try:
+                    pages = paginator.page(page)
+                except PageNotAnInteger:
+                    pages = paginator.page(1)
+                except EmptyPage:
+                    pages = paginator.page(paginator.num_pages)
+
+                return render(request, template,
+                         {'pages': pages,'form': form,
+                          'check_todo': check_todo, 'uncheck_todo': uncheck_todo})
+
+
+
+
+
+
+

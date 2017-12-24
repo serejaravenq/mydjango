@@ -1,0 +1,31 @@
+<div id="content">
+   <h2 class="complete">Completed <span>{{ check_todo }}</span></h2>
+    <h2 class="uncomplete">Uncompleted <span>{{ uncheck_todo }}</span></h2>
+    <p class="pages"></p>
+{% if pages.has_other_pages %}
+  <ul id='pages'class="pagination">
+    {% if pages.has_previous %}
+      <li><a href="?page={{ pages.previous_page_number }}&filter={{ pages.event }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in pages.paginator.page_range %}
+      {% if pages.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only" id="{{ i }}">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}&filter={{ pages.event }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if pages.has_next %}
+      <li><a href="?page={{ pages.next_page_number }}&filter={{ pages.event }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+     <ul class="list-unstyled" id="todo">
+     {% for todo in pages %}
+    <li id="{{ todo.id }}" class="todo_item"><input type="checkbox" class="checkbox" {{ todo.active|yesno:'unchecked,checked' }}><strong>title:</strong> <span class="title">{{ todo.title }}</span>  <a class="remove" ">delete</a></li>
+      {% endfor %}
+  </ul>
+</div>

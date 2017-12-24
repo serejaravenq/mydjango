@@ -1,0 +1,5 @@
+ <ul class="list-unstyled" id="todo">
+     {% for todo in pages %}
+    <li id="{{ todo.id }}" class="todo_item"><input type="checkbox" class="checkbox" {{ todo.active|yesno:'unchecked,checked' }}><strong>title:</strong> <span class="title">{{ todo.title }}</span>  <a class="remove" href="#"">delete</a></li>
+      {% endfor %}
+  </ul>

@@ -19,3 +19,15 @@ class Book(models.Model):
 
 class todoInfo(models.Model):
     title = models.CharField(max_length=30)
+    active = models.BooleanField(default=False)
+
+class asdf(models.Model):
+    title = models.CharField(max_length=30)
+    active = models.BooleanField(default=False)
+
+class myTodo(models.Model):
+    title = models.CharField(max_length=30)
+    active = models.BooleanField(default=False)
+
+
+
